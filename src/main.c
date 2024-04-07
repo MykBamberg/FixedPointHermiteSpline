@@ -3,39 +3,9 @@
   See LICENSE for license details.
 */
 
-#include <SDL2/SDL.h>
-#include <stdlib.h>
+#include "config.h"
+#include "display.h"
 
-#define SCREEN_WIDTH 512
-#define SCREEN_HEIGHT 512
-#define WINDOW_TITLE "Hermite Spline"
-
-/* Catppuccin inspired colors */
-#define C_BKG   0x1E1E2F
-#define C_FG    0xCED6F2
-#define C_HIGH  0xC196F3
-#define C_XRTA  0x44526A
-
-/* Fixed point math one */
-#define ONE (1 << 12)
-
-typedef struct
-{
-    int x;
-    int y;
-} point;
-
-point addPoints(point a, point b) 
-{
-    point p; 
-    p.x = a.x + b.x; 
-    p.y = a.y + b.y; 
-    return p;
-}
-
-void displayRGBPixelBuffer(Uint32* pixelBuffer, int width, int height);
-void drawLine(Uint32* pixelBuffer, int width, int height, Uint32 color, point beginning, point end);
-void drawPointCross(Uint32* pixelBuffer, int width, int height, Uint32 color, point position);
 
 int main() {
     Uint32* pixelBuffer = malloc(sizeof(Uint32) * SCREEN_WIDTH * SCREEN_HEIGHT);
@@ -44,7 +14,7 @@ int main() {
     
     for(int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
     {
-        pixelBuffer[i] = C_BKG;
+        pixelBuffer[i] = COL_BG;
     }
     
     point p0, p1, v0, v1; // p: start/end points, v: start/end velocities
@@ -56,16 +26,16 @@ int main() {
     
     /* linear interpolation between p0 and p1 */
     {
-        drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_XRTA, p0, p1);
-        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_HIGH, p0);
-        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_HIGH, p1);
+        drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, p1);
+        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p0);
+        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p1);
     }
     /* velocity vectors at start and end points */
     {
-        drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_XRTA, p0, addPoints(p0, v0));
-        drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_XRTA, p1, addPoints(p1, v1));
-        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_HIGH, addPoints(p0, v0));
-        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, C_HIGH, addPoints(p1, v1));
+        drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, addPoints(p0, v0));
+        drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p1, addPoints(p1, v1));
+        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, addPoints(p0, v0));
+        drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, addPoints(p1, v1));
     }
     
     /* Drawing the spline */
@@ -92,102 +62,12 @@ int main() {
         if ( x >= 0 && x < SCREEN_WIDTH &&
             y >= 0 && y < SCREEN_HEIGHT )
         {
-            pixelBuffer[x + SCREEN_WIDTH * y] = C_FG;
+            pixelBuffer[x + SCREEN_WIDTH * y] = COL_FG;
         }
     }
     
-    displayRGBPixelBuffer(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    displayRGBPixelBuffer(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     free(pixelBuffer);
     
     return 0;
-}
-
-void displayRGBPixelBuffer(Uint32* pixelBuffer, int width, int height)
-{
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_Texture* texture;
-    
-    SDL_Init(SDL_INIT_VIDEO);
-    
-    window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
-    
-    SDL_UpdateTexture(texture, NULL, pixelBuffer, width * sizeof(Uint32));
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
-    
-    SDL_Event e;
-    while (1) 
-    {
-        if (SDL_PollEvent(&e) && e.type == SDL_QUIT)
-        {
-            break;
-        }
-    }
-    
-    SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-}
-
-void drawLine(Uint32* pixelBuffer, int width, int height, Uint32 color, point beginning, point end)
-{
-    int dx = abs(end.x - beginning.x);
-    int sx = beginning.x < end.x ? 1 : -1;
-    int dy = -abs(end.y - beginning.y);
-    int sy = beginning.y < end.y ? 1 : -1;
-    int err = dx + dy;
-    int e2;
-    
-    int x = beginning.x, y = beginning.y;
-    
-    while (x != end.x || y != end.y) 
-    {
-        if ( x >= 0 && x < width &&
-             y >= 0 && y < height )
-        {
-            pixelBuffer[x + width * y] = color;
-        }
-        
-        e2 = err * 2;
-        err += dy * (e2 > dy);
-        x   += sx * (e2 > dy);
-        err += dx * (e2 < dx);
-        y   += sy * (e2 < dx);
-    }
-    
-    if ( x >= 0 && x < width &&
-        y >= 0 && y < height )
-    {
-        pixelBuffer[x + width * y] = color;
-    }
-}
-
-void drawPointCross(Uint32* pixelBuffer, int width, int height, Uint32 color, point position)
-{
-    int distanceFromCenter = 6;
-    
-    point topLeftPoint, topRightPoint, bottomLeftPoint, bottomRightPoint;
-    
-    memcpy(&topLeftPoint, &position, sizeof(point)); memcpy(&topRightPoint, &position, sizeof(point));
-    memcpy(&bottomLeftPoint, &position, sizeof(point)); memcpy(&bottomRightPoint, &position, sizeof(point));
-    
-    topLeftPoint.x -= distanceFromCenter;
-    topLeftPoint.y -= distanceFromCenter;
-    
-    topRightPoint.x += distanceFromCenter;
-    topRightPoint.y -= distanceFromCenter;
-    
-    bottomLeftPoint.x -= distanceFromCenter;
-    bottomLeftPoint.y += distanceFromCenter;
-    
-    bottomRightPoint.x += distanceFromCenter;
-    bottomRightPoint.y += distanceFromCenter;
-    
-    drawLine(pixelBuffer, width, height, color, bottomLeftPoint, topRightPoint);
-    drawLine(pixelBuffer, width, height, color, topLeftPoint, bottomRightPoint);
 }
