@@ -48,7 +48,7 @@ void drawLine(Uint32* pixelBuffer, int width, int height, Uint32 color, point be
         if ( x >= 0 && x < width &&
             y >= 0 && y < height )
         {
-            pixelBuffer[x + width * y] = color;
+            mergeColorsLighten(&pixelBuffer[x + width * y], color);
         }
         
         e2 = err * 2;
@@ -61,7 +61,7 @@ void drawLine(Uint32* pixelBuffer, int width, int height, Uint32 color, point be
     if ( x >= 0 && x < width &&
         y >= 0 && y < height )
     {
-        pixelBuffer[x + width * y] = color;
+        mergeColorsLighten(&pixelBuffer[x + width * y], color);
     }
 }
 
@@ -96,4 +96,56 @@ void drawPointCross(Uint32* pixelBuffer, int width, int height, Uint32 color, po
     
     drawLine(pixelBuffer, width, height, color, bottomLeftPoint, topRightPoint);
     drawLine(pixelBuffer, width, height, color, topLeftPoint, bottomRightPoint);
+}
+
+void mergeColorsLighten (Uint32* pixel, Uint32 color)
+{
+    uint8_t r1, g1, b1, r2, g2, b2;
+    b1 = 0xff & ((*pixel) >>  0);
+    g1 = 0xff & ((*pixel) >>  8);
+    r1 = 0xff & ((*pixel) >> 16);
+    
+    b2 = 0xff & (color >>  0);
+    g2 = 0xff & (color >>  8);
+    r2 = 0xff & (color >> 16);
+    
+    (*pixel)  = (b1 > b2 ? b1 : b2) << 0;
+    (*pixel) += (g1 > g2 ? g1 : g2) << 8;
+    (*pixel) += (r1 > r2 ? r1 : r2) << 16;
+}
+
+unsigned int* createHeatMapBuffer (int width, int height)
+{
+    unsigned int* buffer = malloc(sizeof(unsigned int) * width * height);
+    memset(buffer, 0, sizeof(unsigned int) * width * height);
+    
+    return buffer;
+}
+
+void plotHeatMapPoint 
+(
+    Uint32* pixelBuffer, int width, int height, 
+    point p, unsigned int* heatMapBuffer, 
+    const Uint32* heatMapColors, int colorWeight, int colorCount, 
+    const uint32_t* pointShape, int pointDistanceFromCenter
+)
+{
+    for(int xOffset = -pointDistanceFromCenter; xOffset <= pointDistanceFromCenter; xOffset++)
+    for(int yOffset = -pointDistanceFromCenter; yOffset <= pointDistanceFromCenter; yOffset++)
+    {
+        /* out of bounds */
+        if(p.x + xOffset < 0 || p.x + xOffset >= width || p.y + yOffset < 0 || p.y + yOffset >= height) continue;
+        
+        int index = p.x + xOffset + width * (p.y + yOffset);
+        
+        /* adds value from point shape to heat map buffer */
+        heatMapBuffer[index] += pointShape[pointDistanceFromCenter + xOffset + (1 + 2 * pointDistanceFromCenter) * (pointDistanceFromCenter + yOffset)];
+        
+        unsigned int heat = heatMapBuffer[index];
+        
+        heat /= colorWeight;
+        heat = heat >= colorCount ? colorCount - 1 : heat;
+        
+        pixelBuffer[index] = heatMapColors[heat];
+    }
 }
