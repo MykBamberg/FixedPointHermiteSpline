@@ -59,7 +59,7 @@ const uint32_t HeatMapColors[] =
  * if at 1, each occurrence will increase the color index by 1
  * if at any other number n,
  * the index will increase for every n additional occurrences
- * 22 is chosen due to the HeatMapPointShape sum from left to right
+ * 22 is chosen since the HeatMapPointShape sum from left to right
  * in the middle of the shape equals 22 */
 #define HEAT_MAP_COLOR_WEIGHT 22
 
