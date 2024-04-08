@@ -18,21 +18,19 @@ int main() {
         pixelBuffer[i] = COL_BG;
     }
     
-    point p0, p1, v0, v1; // p: start/end points, v: start/end velocities
+    /* p: start/end points, v: start/end velocities */
     
-    p0.x =  100;  p0.y =  50; 
-    p1.x =  400;  p1.y =  250;
-    v0.x = -90 ;  v0.y =  512;
-    v1.x = -300;  v1.y =  250;
+    const point p0 = {  50,  50};
+    const point p1 = { 800, 350};
+    const point v0 = { 110, 800};
+    const point v1 = {-100,  50};
     
     /* Drawing the spline */
     for(int t = 0; t <= ONE; t++)
     {
         int t2 = t * t / ONE;
         int t3 = t2 * t / ONE;
-        
-        point p;
-        p.x = 0; p.y = 0;
+        point p = {0, 0};
         
         p.x += (2 * t3 - 3 * t2 + ONE)    * p0.x;
         p.x += (t3 - 2 * t2 + t)          * v0.x;

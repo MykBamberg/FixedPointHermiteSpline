@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define SCREEN_WIDTH 512
-#define SCREEN_HEIGHT 512
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 1024
 #define WINDOW_TITLE "Hermite Spline"
 
 /* Catppuccin inspired colors */
@@ -55,14 +55,22 @@ const uint32_t HeatMapColors[] =
     0xFF8080
 };
 
+/* the "weight" of each color
+ * if at 1, each occurrence will increase the color index by 1
+ * if at any other number n,
+ * the index will increase for every n additional occurrences
+ * 22 is chosen due to the HeatMapPointShape sum from left to right
+ * in the middle of the shape equals 22 */
 #define HEAT_MAP_COLOR_WEIGHT 22
+
 #define HEAT_MAP_COLOR_COUNT 32
 
+/* a monochrome bitmap of the shape of every plotted point on the heat map */
 const uint32_t HeatMapPointShape[] =
 {
     0, 1, 2, 1, 0,
     1, 3, 5, 3, 1,
-    2, 5, 8, 5, 2,
+    2, 5, 8, 5, 2, /* 2 + 5 + 8 + 5 + 2 = 22 */
     1, 3, 5, 3, 1,
     0, 1, 2, 1, 0
 };
