@@ -8,21 +8,14 @@
 
 
 int main() {
-    Uint32* pixelBuffer = malloc(sizeof(Uint32) * SCREEN_WIDTH * SCREEN_HEIGHT);
+    Uint32* pixelBuffer = createPixelBuffer(SCREEN_WIDTH, SCREEN_HEIGHT, COL_BG);
     unsigned int* heatMapBuffer = createHeatMapBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-    
-    /* Set BG color */
-    
-    for(int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
-    {
-        pixelBuffer[i] = COL_BG;
-    }
     
     /* p: start/end points, v: start/end velocities */
     
     const point p0 = {  50,  50};
     const point p1 = { 800, 350};
-    const point v0 = { 110, 800};
+    const point v0 = { 110, 200};
     const point v1 = {-100,  50};
     
     /* Drawing the spline */

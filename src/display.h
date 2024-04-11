@@ -12,6 +12,7 @@ typedef struct
 
 point addPoints (point a, point b);
 
+Uint32* createPixelBuffer(int width, int height, Uint32 defaultColor);
 void displayRGBPixelBuffer (Uint32* pixelBuffer, int width, int height, char* title);
 
 void drawLine (Uint32* pixelBuffer, int width, int height, Uint32 color, point beginning, point end);

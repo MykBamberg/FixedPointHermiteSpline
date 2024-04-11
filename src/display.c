@@ -1,5 +1,23 @@
 #include "display.h"
 
+#include <SDL2/SDL_stdinc.h>
+#include <assert.h>
+#include <stdlib.h>
+
+Uint32* createPixelBuffer(int width, int height, Uint32 defaultColor)
+{
+    Uint32* pixelBuffer;
+    pixelBuffer = malloc(width * height * sizeof(Uint32));
+    assert(pixelBuffer != NULL);
+    
+    for(int i = 0; i < width * height; i++)
+    {
+        pixelBuffer[i] = defaultColor;
+    }
+    
+    return pixelBuffer;
+}
+
 void displayRGBPixelBuffer(Uint32* pixelBuffer, int width, int height, char* title)
 {
     SDL_Window* window;
@@ -116,10 +134,11 @@ void mergeColorsLighten (Uint32* pixel, Uint32 color)
 
 unsigned int* createHeatMapBuffer (int width, int height)
 {
-    unsigned int* buffer = malloc(sizeof(unsigned int) * width * height);
-    memset(buffer, 0, sizeof(unsigned int) * width * height);
+    unsigned int* heatMapBuffer = malloc(sizeof(unsigned int) * width * height);
+    assert(heatMapBuffer != NULL);
+    memset(heatMapBuffer, 0, sizeof(unsigned int) * width * height);
     
-    return buffer;
+    return heatMapBuffer;
 }
 
 void plotHeatMapPoint 
