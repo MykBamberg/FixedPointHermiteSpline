@@ -16,7 +16,11 @@
 #define SHOW_LINES 1
 #define SHOW_POINTS 1
 
-static const uint32_t HeatMapColors[] = {
+#ifdef __clang__
+#define constexpr static const
+#endif
+
+constexpr uint32_t heat_map_colors[] = {
     0x1e1e2f,
     0x1f1f31,
     0x202033,
@@ -93,7 +97,7 @@ static const uint32_t HeatMapColors[] = {
 #define HEAT_MAP_COLOR_COUNT 65
 
 /* a monochrome bitmap of the shape of every plotted point on the heat map */
-const uint32_t HeatMapPointShape[] = {
+constexpr int32_t heat_map_point_shape[] = {
     0, 1, 2, 1, 0,
     1, 3, 5, 3, 1,
     2, 5, 8, 5, 2,

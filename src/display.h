@@ -2,28 +2,23 @@
 #define DISPLAY_H
 
 #include <SDL2/SDL.h>
-#include <stdlib.h>
+#include <inttypes.h>
 
 typedef struct {
-    int x;
-    int y;
+    int32_t x;
+    int32_t y;
 } point;
 
-point addPoints (point a, point b);
+point add_points(point a, point b);
 
-Uint32* createPixelBuffer(int width, int height, Uint32 defaultColor);
-void displayRGBPixelBuffer (Uint32* pixelBuffer, int width, int height, char* title);
+uint32_t* create_pixel_buffer(int32_t width, int32_t height, Uint32 defaultColor);
+void display_rgb_pixel_buffer(uint32_t* pixelBuffer, int32_t width, int32_t height, char* title);
 
-void drawLine (Uint32* pixelBuffer, int width, int height, Uint32 color, point beginning, point end);
-void drawPointCross (Uint32* pixelBuffer, int width, int height, Uint32 color, point position);
-void mergeColorsLighten (Uint32* pixel, Uint32 color);
+void draw_line(uint32_t* pixelBuffer, int32_t width, int32_t height, Uint32 color, point beginning, point end);
+void draw_point_cross(uint32_t* pixelBuffer, int width, int height, Uint32 color, point position);
+void merge_colors_ligthen(uint32_t* pixel, Uint32 color);
 
-unsigned int* createHeatMapBuffer (int width, int height);
-void plotHeatMapPoint (
-    Uint32* pixelBuffer, int width, int height, 
-    point p, unsigned int* heatMapBuffer, 
-    const Uint32* heatMapColors, int colorWeight, int colorCount, 
-    const uint32_t* pointShape, int pointDistanceFromCenter
-);
+int32_t* create_heat_map_buffer(int32_t width, int32_t height);
+void plot_heat_map_point(uint32_t* pixelBuffer, int32_t width, int32_t height, point p, int32_t* heatMapBuffer);
 
 #endif

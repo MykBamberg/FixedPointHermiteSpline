@@ -7,17 +7,18 @@
 #include "display.h"
 #include "fixed_point.h"
 #include <math.h>
+#include <assert.h>
 
-point hermite(int t, const point p0, const point p1, const point v0, const point v1) {
-    int t2 = t * t >> FRACTION_BITS;
-    int t3 = t2 * t >> FRACTION_BITS;
+static point hermite(int32_t t, const point p0, const point p1, const point v0, const point v1) {
+    int32_t t2 = t * t >> FRACTION_BITS;
+    int32_t t3 = t2 * t >> FRACTION_BITS;
     point p = {0};
-    
+
     p.x += (2 * t3 - 3 * t2 + FIXED_POINT_ONE) * p0.x;
     p.x += (t3 - 2 * t2 + t) * v0.x;
     p.x += (-2 * t3 + 3 * t2) * p1.x;
     p.x += (t3 - t2) * v1.x;
-    
+
     p.y += (2 * t3 - 3 * t2 + FIXED_POINT_ONE) * p0.y;
     p.y += (t3 - 2 * t2 + t) * v0.y;
     p.y += (-2 * t3 + 3 * t2) * p1.y;
@@ -26,64 +27,72 @@ point hermite(int t, const point p0, const point p1, const point v0, const point
     return p;
 }
 
-int main() {
-    Uint32* pixelBuffer = createPixelBuffer(SCREEN_WIDTH, SCREEN_HEIGHT, COL_BG);
-    unsigned int* heatMapBuffer = createHeatMapBuffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-    
+FILE *csv_fp;
+
+static void csv_init(void) {
+    const char* filename = "out.csv";
+    csv_fp = fopen(filename, "w");
+    assert(csv_fp != NULL);
+}
+
+int main(void) {
+    uint32_t* pixel_buffer = create_pixel_buffer(SCREEN_WIDTH, SCREEN_HEIGHT, COL_BG);
+    int32_t* heat_map_buffer = create_heat_map_buffer(SCREEN_WIDTH, SCREEN_HEIGHT);
+    csv_init();
+    fprintf(csv_fp, "error; step_size\n");
+
     /* p: start/end points, v: start/end velocities */
-    
+
     const point p0 = {  50,  50};
     const point p1 = { 800, 350};
     const point v0 = { 110, 200};
     const point v1 = {-500,  50};
-    
+
     /* Drawing the spline */
-    int step_size = FIXED_POINT_ONE / (abs(p0.x - p1.x) + abs(p0.y - p1.y));
+    int32_t step_size = FIXED_POINT_ONE / (abs(p0.x - p1.x) + abs(p0.y - p1.y));
     point last_p = hermite(0, p0, p1, v0, v1);
 
-    for(int t = step_size; t <= FIXED_POINT_ONE; t += step_size) {
+    for(int32_t t = step_size; t <= FIXED_POINT_ONE; t += step_size) {
         point p = hermite(t, p0, p1, v0, v1);
 
-        int error = (
+        int32_t error = (
             (p.x - last_p.x) * (p.x - last_p.x) +
             (p.y - last_p.y) * (p.y - last_p.y)) -
             (FIXED_POINT_ONE * FIXED_POINT_ONE);
 
-        const int volatility = 3;
+        constexpr int volatility = 3;
         step_size -= (error) >> (FRACTION_BITS * 2 - volatility);
 
-        /* printf("error: %f; step_size: %d\n", sqrtf(((float)error + FIXED_POINT_ONE * FIXED_POINT_ONE) / FIXED_POINT_ONE / FIXED_POINT_ONE), step_size); */
+        fprintf(csv_fp, "%f; %d\n",
+                sqrtf(((float)error + FIXED_POINT_ONE * FIXED_POINT_ONE) / FIXED_POINT_ONE / FIXED_POINT_ONE),
+                step_size);
 
         last_p = p;
 
         p.x >>= FRACTION_BITS;
         p.y >>= FRACTION_BITS;
-       
+
         if (p.x >= 0 && p.x < SCREEN_WIDTH && p.y >= 0 && p.y < SCREEN_HEIGHT) {
-            plotHeatMapPoint (
-                pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, 
-                p, heatMapBuffer, HeatMapColors, 
-                HEAT_MAP_COLOR_WEIGHT, HEAT_MAP_COLOR_COUNT, 
-                HeatMapPointShape, HEAT_MAP_POINT_SHAPE_DISTANCE_FROM_CENTER
-            );
+            plot_heat_map_point(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, p, heat_map_buffer);
         }
     }
-    
+
     { /* linear interpolation between p0 and p1 */
-        if (SHOW_LINES) drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, p1);
-        if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p0);
-        if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p1);
+        if (SHOW_LINES) draw_line(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, p1);
+        if (SHOW_POINTS) draw_point_cross(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p0);
+        if (SHOW_POINTS) draw_point_cross(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p1);
     }
     { /* velocity vectors at start and end points */
-        if (SHOW_LINES) drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, addPoints(p0, v0));
-        if (SHOW_LINES) drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p1, addPoints(p1, v1));
-        if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, addPoints(p0, v0));
-        if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, addPoints(p1, v1));
+        if (SHOW_LINES) draw_line(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, add_points(p0, v0));
+        if (SHOW_LINES) draw_line(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p1, add_points(p1, v1));
+        if (SHOW_POINTS) draw_point_cross(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, add_points(p0, v0));
+        if (SHOW_POINTS) draw_point_cross(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, add_points(p1, v1));
     }
-    
-    displayRGBPixelBuffer(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
-    free(pixelBuffer);
-    free(heatMapBuffer);
-    
+
+    display_rgb_pixel_buffer(pixel_buffer, SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+    free(pixel_buffer);
+    free(heat_map_buffer);
+    fclose(csv_fp);
+
     return 0;
 }
