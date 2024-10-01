@@ -19,8 +19,7 @@ int main() {
     const point v1 = {-100,  50};
     
     /* Drawing the spline */
-    for(int t = 0; t <= ONE; t++)
-    {
+    for(int t = 0; t <= ONE; t++) {
         int t2 = t * t / ONE;
         int t3 = t2 * t / ONE;
         point p = {0, 0};
@@ -38,11 +37,8 @@ int main() {
         p.x /= ONE;
         p.y /= ONE;
         
-        if ( p.x >= 0 && p.x < SCREEN_WIDTH &&
-            p.y >= 0 && p.y < SCREEN_HEIGHT )
-        {
-            plotHeatMapPoint
-            (
+        if (p.x >= 0 && p.x < SCREEN_WIDTH && p.y >= 0 && p.y < SCREEN_HEIGHT) {
+            plotHeatMapPoint (
                 pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, 
                 p, heatMapBuffer, HeatMapColors, 
                 HEAT_MAP_COLOR_WEIGHT, HEAT_MAP_COLOR_COUNT, 
@@ -51,14 +47,12 @@ int main() {
         }
     }
     
-    /* linear interpolation between p0 and p1 */
-    {
+    { /* linear interpolation between p0 and p1 */
         if (SHOW_LINES) drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, p1);
         if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p0);
         if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, p1);
     }
-    /* velocity vectors at start and end points */
-    {
+    { /* velocity vectors at start and end points */
         if (SHOW_LINES) drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p0, addPoints(p0, v0));
         if (SHOW_LINES) drawLine(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_LINE, p1, addPoints(p1, v1));
         if (SHOW_POINTS) drawPointCross(pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, COL_POINT, addPoints(p0, v0));

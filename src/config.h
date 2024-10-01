@@ -7,7 +7,6 @@
 #define SCREEN_HEIGHT 1024
 #define WINDOW_TITLE "Hermite Spline"
 
-/* Catppuccin inspired colors */
 #define COL_BG    0x1E1E2F
 #define COL_FG    0xCED6F2
 #define COL_POINT 0xC196F3
@@ -19,8 +18,7 @@
 #define SHOW_LINES 1
 #define SHOW_POINTS 1
 
-const uint32_t HeatMapColors[] = 
-{
+static const uint32_t HeatMapColors[] = {
     0x1e1e2f,
     0x1f1f31,
     0x202033,

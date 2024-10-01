@@ -4,8 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 
-typedef struct
-{
+typedef struct {
     int x;
     int y;
 } point;
@@ -20,8 +19,7 @@ void drawPointCross (Uint32* pixelBuffer, int width, int height, Uint32 color, p
 void mergeColorsLighten (Uint32* pixel, Uint32 color);
 
 unsigned int* createHeatMapBuffer (int width, int height);
-void plotHeatMapPoint 
-(
+void plotHeatMapPoint (
     Uint32* pixelBuffer, int width, int height, 
     point p, unsigned int* heatMapBuffer, 
     const Uint32* heatMapColors, int colorWeight, int colorCount, 
