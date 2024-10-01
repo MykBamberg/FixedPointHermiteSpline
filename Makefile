@@ -1,7 +1,7 @@
 CC := gcc
 
 CFLAGS := -Wall -Wextra -Wpedantic -Wconversion -Werror -O3 --std=gnu23
-LDFLAGS := -lSDL2
+LDFLAGS := -lSDL2 -lm
 
 SRC_DIR := src
 BIN_DIR := bin

@@ -1,11 +1,30 @@
 /*
-  A simple fixed point Hermite Spline rendering application!
+  A simple fixed point Hermite Spline rendering application
   See LICENSE for license details.
 */
 
 #include "config.h"
 #include "display.h"
+#include "fixed_point.h"
+#include <math.h>
 
+point hermite(int t, const point p0, const point p1, const point v0, const point v1) {
+    int t2 = t * t >> FRACTION_BITS;
+    int t3 = t2 * t >> FRACTION_BITS;
+    point p = {0};
+    
+    p.x += (2 * t3 - 3 * t2 + FIXED_POINT_ONE) * p0.x;
+    p.x += (t3 - 2 * t2 + t) * v0.x;
+    p.x += (-2 * t3 + 3 * t2) * p1.x;
+    p.x += (t3 - t2) * v1.x;
+    
+    p.y += (2 * t3 - 3 * t2 + FIXED_POINT_ONE) * p0.y;
+    p.y += (t3 - 2 * t2 + t) * v0.y;
+    p.y += (-2 * t3 + 3 * t2) * p1.y;
+    p.y += (t3 - t2) * v1.y;
+
+    return p;
+}
 
 int main() {
     Uint32* pixelBuffer = createPixelBuffer(SCREEN_WIDTH, SCREEN_HEIGHT, COL_BG);
@@ -16,27 +35,30 @@ int main() {
     const point p0 = {  50,  50};
     const point p1 = { 800, 350};
     const point v0 = { 110, 200};
-    const point v1 = {-100,  50};
+    const point v1 = {-500,  50};
     
     /* Drawing the spline */
-    for(int t = 0; t <= ONE; t++) {
-        int t2 = t * t / ONE;
-        int t3 = t2 * t / ONE;
-        point p = {0, 0};
-        
-        p.x += (2 * t3 - 3 * t2 + ONE)    * p0.x;
-        p.x += (t3 - 2 * t2 + t)          * v0.x;
-        p.x += (-2 * t3 + 3 * t2)         * p1.x;
-        p.x += (t3 - t2)                  * v1.x;
-        
-        p.y += (2 * t3 - 3 * t2 + ONE)    * p0.y;
-        p.y += (t3 - 2 * t2 + t)          * v0.y;
-        p.y += (-2 * t3 + 3 * t2)         * p1.y;
-        p.y += (t3 - t2)                  * v1.y;
-        
-        p.x /= ONE;
-        p.y /= ONE;
-        
+    int step_size = FIXED_POINT_ONE / (abs(p0.x - p1.x) + abs(p0.y - p1.y));
+    point last_p = hermite(0, p0, p1, v0, v1);
+
+    for(int t = step_size; t <= FIXED_POINT_ONE; t += step_size) {
+        point p = hermite(t, p0, p1, v0, v1);
+
+        int error = (
+            (p.x - last_p.x) * (p.x - last_p.x) +
+            (p.y - last_p.y) * (p.y - last_p.y)) -
+            (FIXED_POINT_ONE * FIXED_POINT_ONE);
+
+        const int volatility = 3;
+        step_size -= (error) >> (FRACTION_BITS * 2 - volatility);
+
+        /* printf("error: %f; step_size: %d\n", sqrtf(((float)error + FIXED_POINT_ONE * FIXED_POINT_ONE) / FIXED_POINT_ONE / FIXED_POINT_ONE), step_size); */
+
+        last_p = p;
+
+        p.x >>= FRACTION_BITS;
+        p.y >>= FRACTION_BITS;
+       
         if (p.x >= 0 && p.x < SCREEN_WIDTH && p.y >= 0 && p.y < SCREEN_HEIGHT) {
             plotHeatMapPoint (
                 pixelBuffer, SCREEN_WIDTH, SCREEN_HEIGHT, 

@@ -13,8 +13,6 @@
 #define COL_LINE  0x44526A
 
 /* Fixed point math one */
-#define ONE (1 << 12)
-
 #define SHOW_LINES 1
 #define SHOW_POINTS 1
 
@@ -90,13 +88,12 @@ static const uint32_t HeatMapColors[] = {
  * if set to 1, each occurrence will increase the color index by 1
  * if set to any other number n,
  * the index will increase for every n additional occurrences */
-#define HEAT_MAP_COLOR_WEIGHT 5
+#define HEAT_MAP_COLOR_WEIGHT 1
 
 #define HEAT_MAP_COLOR_COUNT 65
 
 /* a monochrome bitmap of the shape of every plotted point on the heat map */
-const uint32_t HeatMapPointShape[] =
-{
+const uint32_t HeatMapPointShape[] = {
     0, 1, 2, 1, 0,
     1, 3, 5, 3, 1,
     2, 5, 8, 5, 2,

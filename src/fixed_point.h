@@ -1,0 +1,7 @@
+#ifndef FIXED_POINT_H
+#define FIXED_POINT_H
+
+#define FRACTION_BITS 14
+#define FIXED_POINT_ONE (1 << FRACTION_BITS)
+
+#endif
