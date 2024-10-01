@@ -27,19 +27,20 @@ static point hermite(int32_t t, const point p0, const point p1, const point v0, 
     return p;
 }
 
-FILE *csv_fp;
-
-static void csv_init(void) {
+FILE* csv_init(void) {
     const char* filename = "out.csv";
-    csv_fp = fopen(filename, "w");
+    FILE* csv_fp = fopen(filename, "w");
     assert(csv_fp != NULL);
+
+    return csv_fp;
 }
 
 int main(void) {
     uint32_t* pixel_buffer = create_pixel_buffer(SCREEN_WIDTH, SCREEN_HEIGHT, COL_BG);
     int32_t* heat_map_buffer = create_heat_map_buffer(SCREEN_WIDTH, SCREEN_HEIGHT);
-    csv_init();
-    fprintf(csv_fp, "error; step_size\n");
+
+    FILE* csv_fp = csv_init();
+    fprintf(csv_fp, "distance per step; step size\n");
 
     /* p: start/end points, v: start/end velocities */
 
@@ -49,6 +50,8 @@ int main(void) {
     const point v1 = {-500,  50};
 
     /* Drawing the spline */
+
+    /* Estimate optimal step size */
     int32_t step_size = FIXED_POINT_ONE / (abs(p0.x - p1.x) + abs(p0.y - p1.y));
     point last_p = hermite(0, p0, p1, v0, v1);
 
@@ -64,7 +67,7 @@ int main(void) {
         step_size -= (error) >> (FRACTION_BITS * 2 - volatility);
 
         fprintf(csv_fp, "%f; %d\n",
-                sqrtf(((float)error + FIXED_POINT_ONE * FIXED_POINT_ONE) / FIXED_POINT_ONE / FIXED_POINT_ONE),
+                hypot((double)p.x - (double)last_p.x, (double)p.y - (double)last_p.y) / (double)FIXED_POINT_ONE,
                 step_size);
 
         last_p = p;
